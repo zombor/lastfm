@@ -17,7 +17,7 @@ fetch_service_session($token)
 ---
 Obtains an authorization session id. You should store this in a secure location (that means encrypted).
 
-api($method, $session, array $params = array())
+api($method, array $params = array())
 ---
 Sends an api request to last.fm. Returns a json string of the result.
 
