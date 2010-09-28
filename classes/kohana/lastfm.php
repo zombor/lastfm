@@ -8,11 +8,21 @@
  */
 class Kohana_LastFM
 {
+	public static $session = NULL;
+
 	protected static $key = '';
 	protected static $secret = '';
 	protected static $url = 'http://ws.audioscrobbler.com/2.0/';
 
-	protected static $session = NULL;
+	/**
+	 * Dynamically calls a API method using api()
+	 *
+	 * @return mixed
+	 */
+	public function __call($method, array $arguments)
+	{
+		return $this->api($method, $arguments);
+	}
 
 	/**
 	 * Determines if we have a valid last.fm session for this user
@@ -21,7 +31,7 @@ class Kohana_LastFM
 	 */
 	public function has_valid_session()
 	{
-		return self::$session == NULL;
+		return isset(self::$session);
 	}
 
 	/**
@@ -48,7 +58,7 @@ class Kohana_LastFM
 	public function fetch_service_session($token)
 	{
 		$request = array(
-			'api_key' => self::$key,
+			'api_key' => LastFM::$key,
 			'method' => 'auth.getSession',
 			'token' => $token,
 		);
@@ -61,12 +71,12 @@ class Kohana_LastFM
 	 *
 	 * @return string the json response
 	 */
-	public function api($method, $session, array $params = array())
+	public function api($method, array $params = array())
 	{
 		$request = array(
-			'api_key' => self::$key,
+			'api_key' => LastFM::$key,
 			'method' => $method,
-			'session' => $session
+			'session' => LastFM::$session
 		)+$params;
 		$request['api_sig'] = $this->sign($request);
 		return $this->do_request($request);
@@ -82,8 +92,8 @@ class Kohana_LastFM
 	 */
 	protected function do_request(array $request, $post = FALSE)
 	{
-		$request = http_build_query($request+array('format' => 'json');
-		$ch = curl_init($post ? self::$url : self::$url.'?'.$request));
+		$request = http_build_query($request+array('format' => 'json'));
+		$ch = curl_init($post ? self::$url : self::$url.'?'.$request);
 
 		curl_setopt_array(
 			$ch,
@@ -110,6 +120,6 @@ class Kohana_LastFM
 		$string = '';
 		foreach ($request as $key => $value)
 			$string.=$key.$value;
-		return md5($string.self::$secret);
+		return md5($string.LastFM::$secret);
 	}
 }
