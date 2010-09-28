@@ -15,17 +15,15 @@ class Controller_LastFM_Example extends Controller
 	{
 		$lastfm = LastFM::instance();
 
-		LastFM::$session = Session::instance()->get('lastfm_session');
-
 		if ( ! $lastfm->has_valid_session())
 			LastFM::authorize('http://lastfm/index.php/lastfm/example/process');
 
-		var_dump(Session::instance()->get('lastfm_session'));
+		var_dump(LastFM::instance()->session());
 		var_dump(
 			$lastfm->api(
 				'user.getLovedTracks',
 				array(
-					'user' => 'zombor_666',
+					'user' => LastFM::instance()->session()->name,
 				)
 			)
 		);

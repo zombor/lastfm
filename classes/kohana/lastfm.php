@@ -8,7 +8,7 @@
  */
 class Kohana_LastFM
 {
-	public static $session;
+	protected static $session;
 	protected static $instance;
 
 	protected static $key = '';
@@ -37,7 +37,10 @@ class Kohana_LastFM
 	 */
 	protected function __construct()
 	{
-		
+		if ( ! $this->has_valid_session())
+		{
+			LastFM::$session = Session::instance()->get('lastfm_session');
+		}
 	}
 
 	/**
@@ -47,7 +50,19 @@ class Kohana_LastFM
 	 */
 	public function has_valid_session()
 	{
-		return isset(LastFM::$session);
+		return isset(LastFM::$session) AND is_object(LastFM::$session);
+	}
+
+	/**
+	 * Gets the last.fm session object. Returns an object containing:
+	 * 	name - the last.fm username which is authenticated
+	 * 	key  - the last.fm session key used for authenticated api requests
+	 *
+	 * @return object
+	 */
+	public function session()
+	{
+		return LastFM::$session;
 	}
 
 	/**
@@ -82,7 +97,8 @@ class Kohana_LastFM
 			'token' => $token,
 		);
 		$request['api_sig'] = $this->sign($request);
-		return $this->do_request($request)->session->key;
+		$session = $this->do_request($request)->session;
+		Session::instance()->set('lastfm_session', $session);
 	}
 
 	/**
@@ -95,7 +111,7 @@ class Kohana_LastFM
 		$request = array(
 			'api_key' => LastFM::$key,
 			'method' => $method,
-			'sk' => LastFM::$session
+			'sk' => $this->session()->key
 		)+$params;
 		$request['api_sig'] = $this->sign($request);
 
