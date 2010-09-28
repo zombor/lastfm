@@ -13,16 +13,22 @@ class Controller_LastFM_Example extends Controller
 	 */
 	public function action_index()
 	{
-		$lastfm = new LastFM;
+		$lastfm = LastFM::instance();
 
 		LastFM::$session = Session::instance()->get('lastfm_session');
 
 		if ( ! $lastfm->has_valid_session())
 			LastFM::authorize('http://lastfm/index.php/lastfm/example/process');
+
 		var_dump(Session::instance()->get('lastfm_session'));
-		var_dump($lastfm->api('user.getLovedTracks', array(
-			'user' => 'zombor_666',
-		)));
+		var_dump(
+			$lastfm->api(
+				'user.getLovedTracks',
+				array(
+					'user' => 'zombor_666',
+				)
+			)
+		);
 	}
 
 	/**
@@ -33,7 +39,7 @@ class Controller_LastFM_Example extends Controller
 	public function action_process()
 	{
 		$token = arr::get($_GET, 'token');
-		$lastfm = new LastFM;
+		$lastfm = LastFM::instance();
 		$foo = $lastfm->fetch_service_session($token);
 		Session::instance()->set('lastfm_session', $foo);
 		$this->request->redirect('lastfm/example/index');

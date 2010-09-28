@@ -8,20 +8,36 @@
  */
 class Kohana_LastFM
 {
-	public static $session = NULL;
+	public static $session;
+	protected static $instance;
 
 	protected static $key = '';
 	protected static $secret = '';
 	protected static $url = 'http://ws.audioscrobbler.com/2.0/';
 
 	/**
-	 * Dynamically calls a API method using api()
+	 * Singleton pattern instance method
 	 *
-	 * @return mixed
+	 * @return LastFM
 	 */
-	public function __call($method, array $arguments)
+	public static function instance()
 	{
-		return $this->api($method, $arguments);
+		if (LastFM::$instance)
+		{
+			return LastFM::$instance;
+		}
+
+		return LastFM::$instance = new LastFM;
+	}
+
+	/**
+	 * Singleton pattern constructor
+	 *
+	 * @return null
+	 */
+	protected function __construct()
+	{
+		
 	}
 
 	/**
@@ -31,11 +47,14 @@ class Kohana_LastFM
 	 */
 	public function has_valid_session()
 	{
-		return isset(self::$session);
+		return isset(LastFM::$session);
 	}
 
 	/**
-	 * Sends the request to last.fm to get a authorization token
+	 * Sends the request to last.fm to get a authorization token.
+	 * 
+	 * Will redirect back to $redirect_url with a 'token' $_GET parameter. Use
+	 * this to obtain a session token using LastFM::fetch_service_session()
 	 * 
 	 * @param string $redirect_url optional parameter to send the request back to
 	 *
@@ -51,9 +70,9 @@ class Kohana_LastFM
 	}
 
 	/**
-	 * Gets a last.fm user session and assigns it to the class
+	 * Gets a last.fm user session
 	 *
-	 * @return null
+	 * @return string the session key
 	 */
 	public function fetch_service_session($token)
 	{
@@ -63,7 +82,7 @@ class Kohana_LastFM
 			'token' => $token,
 		);
 		$request['api_sig'] = $this->sign($request);
-		return $this->do_request($request);
+		return $this->do_request($request)->session->key;
 	}
 
 	/**
@@ -76,9 +95,13 @@ class Kohana_LastFM
 		$request = array(
 			'api_key' => LastFM::$key,
 			'method' => $method,
-			'session' => LastFM::$session
+			'sk' => LastFM::$session
 		)+$params;
 		$request['api_sig'] = $this->sign($request);
+
+		if (isset(Kohana::config('lastfm')->post[$method]))
+			return $this->do_request($request, TRUE);
+
 		return $this->do_request($request);
 	}
 
@@ -106,15 +129,40 @@ class Kohana_LastFM
 
 		if ($post)
 		{
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
 		}
 
 		$response = curl_exec($ch);
 		curl_close($ch);
 
+		if ( ! $response)
+		{
+			throw new Kohana_Exception(
+				'Could not connect to last.fm api!'
+			);
+		}
+
+		$response = json_decode($response);
+
+		if (isset($response->error))
+		{
+			throw new Kohana_Exception(
+				$response->message,
+				array(),
+				$response->error
+			);
+		}
+
 		return $response;
 	}
 
+	/**
+	 * Performs request string signing per LastFM guidelines
+	 * 
+	 * @param array $request the request array to sign
+	 * 
+	 * @return string the md5 signed request hash
+	 */
 	protected function sign(array $request)
 	{
 		$string = '';
