@@ -38,6 +38,6 @@ class Controller_LastFM_Example extends Controller
 	{
 		$token = arr::get($_GET, 'token');
 		LastFM::instance()->fetch_service_session($token);
-		$this->request->redirect('lastfm/example/index');
+		$this->request->redirect('lastfm_example/index');
 	}
 }
