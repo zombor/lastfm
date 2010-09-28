@@ -87,7 +87,7 @@ class Kohana_LastFM
 	/**
 	 * Gets a last.fm user session
 	 *
-	 * @return string the session key
+	 * @return null
 	 */
 	public function fetch_service_session($token)
 	{
@@ -104,7 +104,7 @@ class Kohana_LastFM
 	/**
 	 * Builds and sends a last.fm API request
 	 *
-	 * @return string the json response
+	 * @return string the response converted from json_decode()
 	 */
 	public function api($method, array $params = array())
 	{
