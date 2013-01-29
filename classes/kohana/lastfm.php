@@ -81,7 +81,7 @@ class Kohana_LastFM
 		if ($redirect_url)
 			$uri.='&cb='.$redirect_url;
 
-		Request::instance()->redirect($uri);
+		HTTP::redirect($uri);
 	}
 
 	/**
