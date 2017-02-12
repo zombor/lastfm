@@ -36,3 +36,5 @@ Sends an api request to last.fm. Returns a json_decode()'d object of the result.
 Config
 ===
 Currently, the configuration items are stored in the class itself. You should extend the class and set the $key and $secret properties. This may (that means probably) change later.
+
+Test the API on [RapidAPI](https://rapidapi.com/package/LastFM/functions?utm_source=LastFMGitHub&utm_medium=button).
